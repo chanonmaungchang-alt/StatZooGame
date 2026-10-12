@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>StatZoo Agent</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Mali:wght@500;700&display=swap">
+  <style>
+  :root{--cream:#FFF6DA;--leaf:#6E9B45;--deep:#35502A;--sun:#FFC845;--coral:#FF8A65;--sky:#CDEFF5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Fredoka','Mali',sans-serif;font-weight:500;background:var(--sky);color:var(--deep)}
+  .scr{display:none;min-height:100vh;padding:14px;align-items:center}
+  .scr.on{display:flex;flex-direction:column}
+  .btn{font:inherit;font-weight:700;font-size:18px;background:var(--sun);color:var(--deep);border:3px solid var(--deep);border-radius:18px;padding:8px 18px;box-shadow:0 5px 0 var(--deep);cursor:pointer}
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--deep)}
+  .btn:focus-visible,.blk button:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+  .btn.g{background:var(--leaf);color:#fff}.btn.r{background:var(--coral);color:#fff}.btn.s{font-size:15px;padding:4px 12px;box-shadow:0 3px 0 var(--deep)}
+  .btn:disabled{opacity:.5}
+  
+  /* HUD & User Profile Style */
+  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:10px;z-index:40;display:flex;gap:8px;align-items:center}
+  #user-profile{display:none;align-items:center;gap:8px;background:var(--cream);border:3px solid var(--deep);border-radius:18px;padding:4px 10px;box-shadow:0 3px 0 var(--deep)}
+  #user-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--deep);object-fit:cover}
+  #user-name{font-weight:700;font-size:14px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  
+  #sp{display:none;position:fixed;top:calc(58px + env(safe-area-inset-top,0px));right:10px;z-index:40;background:var(--cream);border:4px solid var(--deep);border-radius:18px;padding:12px 16px;box-shadow:0 5px 0 var(--deep);width:min(290px,calc(100vw - 20px))}
+  #sp.on{display:block}#sp label{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:700;white-space:nowrap}#sp input{flex:1;min-width:0;accent-color:var(--leaf)}
+  .lbl{list-style:none;margin:8px 0;padding:0;text-align:left}.lbl li{display:flex;gap:10px;align-items:center;background:#fff;border:3px solid var(--deep);border-radius:12px;padding:4px 10px;margin:5px 0}.lbl li b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbl li span{min-width:30px;text-align:center}.lbl li i{font-style:normal}
+  .sub{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}.sub input{font:inherit;border:3px solid var(--deep);border-radius:12px;padding:6px 10px;width:190px}
+  .card{max-height:92vh;overflow:auto}
+  .lg{width:min(320px,76vw)}
+  #lobby{position:relative;overflow:hidden;justify-content:center;background:linear-gradient(#8FD8F0 0%,#CDEFF5 52%,#EAF9D3 75%)}
+  .deco{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .sun{position:absolute;top:6vh;left:7vw;width:96px;height:96px;border-radius:50%;background:#FFD84D;box-shadow:0 0 0 12px #FFE88A99,0 0 0 28px #FFF3B055;animation:pulse 3s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.08)}}
+  .cl{position:absolute;left:-30vw;width:120px;height:38px;background:#fff;border-radius:40px;animation:drift 60s linear infinite}
+  .cl:before,.cl:after{content:'';position:absolute;background:#fff;border-radius:50%}
+  .cl:before{width:54px;height:54px;left:16px;top:-26px}.cl:after{width:40px;height:40px;right:20px;top:-18px}
+  @keyframes drift{to{transform:translateX(160vw)}}
+  .hill{position:absolute;bottom:12vh;border-radius:50% 50% 0 0}
+  .h1{left:-10vw;width:70vw;height:30vh;background:#A9D97A}.h2{right:-15vw;width:80vw;height:24vh;background:#8CC765}
+  .gnd{position:absolute;left:0;right:0;bottom:0;height:20vh;background:repeating-linear-gradient(90deg,#9CD26B 0 48px,#92C961 48px 96px);border-top:6px solid #6E9B45}
+  .tree{position:absolute;bottom:14vh;font-size:clamp(50px,11vw,120px)}
+  .pet{position:absolute;bottom:3vh;font-size:clamp(34px,7vw,72px);filter:drop-shadow(0 4px 0 #0002);animation:hop 2.2s ease-in-out infinite}
+  .fl{position:absolute;bottom:-10vh;font-size:22px;animation:rise 10s linear infinite}
+  @keyframes rise{to{transform:translateY(-120vh) rotate(30deg)}}
+  @keyframes hop{0%,55%,100%{transform:translateY(0)}25%{transform:translateY(-16px)}}
+  .stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  .tx{display:flex;flex-direction:column;align-items:center;gap:12px}
+  #keeper{width:min(200px,46vw);overflow:visible;animation:bob 2s ease-in-out infinite;transform-origin:50% 100%}
+  @keyframes bob{50%{transform:translateY(-10px) scaleY(1.02)}}
+  .wv{transform-origin:142px 138px;animation:wave 1s ease-in-out infinite}
+  @keyframes wave{0%,100%{transform:rotate(-150deg)}50%{transform:rotate(-118deg)}}
+  .eyes{transform-origin:100px 80px;animation:blink 4s infinite}
+  @keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+  .mk{transform-origin:52px 130px;animation:peek 2.6s ease-in-out infinite}
+  @keyframes peek{50%{transform:translateY(-8px) rotate(8deg)}}
+  #gt{margin:0;font-size:clamp(44px,12vw,78px);line-height:1.05}
+  #gt span{display:inline-block;color:#FFF6DA;-webkit-text-stroke:10px #35502A;paint-order:stroke fill;text-shadow:0 6px 0 #35502A;animation:hop 2.4s ease-in-out infinite}
+  #gt span:nth-child(3n+2){color:#FFE08A}#gt span:nth-child(3n){color:#FFC2B3}#gt span:nth-child(5n){color:#CFEFA7}
+  .tag{background:#fff;border:3px solid var(--deep);border-radius:16px;padding:6px 14px;font-weight:700;margin:0}
+  .how{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .how span{background:#FFFDF2;border:3px solid var(--deep);border-radius:14px;padding:4px 12px;font-size:15px}
+  #play{font-size:34px;padding:12px 48px;border-radius:28px;animation:pl 1.4s ease-in-out infinite}
+  @keyframes pl{50%{transform:scale(1.06)}}
+  @media(prefers-reduced-motion:reduce){#lobby *{animation:none!important}}
+  @media(min-width:820px){.stage{flex-direction:row;gap:56px}.tx{align-items:flex-start;text-align:left}#keeper{width:270px}.how{justify-content:flex-start}}
+  @media(max-width:640px){.scr{padding:10px}#story{font-size:15px}#ctl{position:sticky;bottom:0;background:var(--cream);padding:8px;border:3px solid var(--deep);border-radius:16px;z-index:5}.pb{padding:8px 12px;font-size:16px}.blk button{min-width:34px;min-height:30px}.hm{display:none}.sun{width:64px;height:64px}.top{gap:6px}}
+  @media(max-height:560px) and (orientation:landscape){#keeper{width:130px}#gt{font-size:42px}.how{display:none}#play{font-size:24px;padding:8px 30px}}
+  .top{padding-right:112px;display:flex;gap:10px;align-items:center;width:100%;max-width:1100px;flex-wrap:wrap}
+  #cnt,#tm{font-weight:700;background:#fff;border:3px solid var(--deep);border-radius:14px;padding:2px 12px}
+  .lt{display:block;font-size:11px;font-weight:500}
+  #sel h2{margin:10px 0 4px;font-size:32px}
+  #lvs{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:520px;width:100%;margin:14px 0}
+  #lvs .btn{padding:10px 0;font-size:22px;line-height:1.1}
+  #lvs .btn small{display:block;font-size:20px}
+  #ttl{font-size:22px;font-weight:700;flex:1;min-width:160px}
+  #story{max-width:1100px;width:100%;margin:8px 0;background:#fff;border:3px solid var(--deep);border-radius:16px;padding:8px 14px;line-height:1.5}
+  .main{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;width:100%;max-width:1100px}
+  .bw{flex:1 1 320px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .side{flex:1 1 340px;max-width:540px}
+  #board{position:relative;border:4px solid var(--deep);border-radius:16px;overflow:hidden;box-shadow:0 6px 0 var(--deep);background:#B9DE8A}
+  #grid{display:grid}
+  .c{display:flex;align-items:center;justify-content:center;position:relative;line-height:1}
+  .g0{background:#C3E698}.g1{background:#B1D883}.wl{background:#5C8A3E}.wt{background:#6EC6E8}.st{background:#A7E0F2}.ic{background:#E4F7FF}.fg{background:#DDE6E8}.dr{background:#9AA5AD}
+  .cg{background:#F2D8A0;box-shadow:inset 0 0 0 3px #A87B3A}.cg:after{content:'';position:absolute;inset:4px;border-left:3px solid #A87B3A66;border-right:3px solid #A87B3A66;border-radius:6px}
+  .an{filter:drop-shadow(0 3px 0 #0003)}.mo{position:absolute;right:0;top:0;font-size:.5em;font-style:normal}
+  #ag{position:absolute;left:0;top:0;transition:transform .4s ease;pointer-events:none;z-index:3}
+  #ag svg{width:100%;height:100%;transition:transform .3s}
+  #bag{position:absolute;right:-4px;top:-8px}
+  #board.sh{animation:sh .45s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  #msg{min-height:48px;width:100%;text-align:center;font-weight:700;font-size:18px;border-radius:14px;padding:6px}
+  #msg.bad{background:#FFD9CF;border:3px solid var(--coral)}#msg.ok{background:#DDF3C2;border:3px solid var(--leaf)}
+  #pal{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .blk{border:3px solid var(--deep);border-radius:14px;padding:5px 10px;margin:5px 0;background:#fff;font-size:16px}
+  .blk.mv{background:#9ED6F5}.blk.ac{background:#FFC58A}.blk.ct{background:#D8BFF7}.blk.fn{background:#A9E49A}
+  .pb{margin:0;cursor:grab;font:inherit;font-size:15px;font-weight:700;color:var(--deep)}
+  .blk.hl{outline:4px solid var(--coral)}
+  .blk .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.blk .row b:first-child{margin-right:auto}
+  .blk button{font:inherit;font-weight:700;border:2px solid var(--deep);border-radius:9px;background:#fff;color:var(--deep);cursor:pointer;min-width:26px}
+  .blk select{font:inherit;border:2px solid var(--deep);border-radius:9px;background:#fff;color:var(--deep);max-width:160px}
+  .lst{min-height:44px;padding:4px 8px;border:3px dashed #8FA66E;border-radius:14px;background:#FFFDF2;cursor:pointer}
+  .lst.act{border-color:var(--coral);background:#FFF1E6}
+  .lst em{color:#7b8a64;font-size:14px;font-style:normal;display:block;padding:8px 0}
+  .blk small{font-weight:700}
+  h3{margin:10px 0 4px;font-size:18px}
+  #ctl{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  #ctl #run{font-size:22px;flex:1}
+  </style>
+</head>
+<body>
+
+  <!-- ส่วนแสดงผลสถานะการเข้าสู่ระบบ (HUD) -->
+  <div id="hud">
+    <button id="login-btn" class="btn g s" onclick="loginWithGoogle()">🔑 Sign in with Google</button>
+    <div id="user-profile">
+      <img id="user-avatar" src="" alt="User Avatar">
+      <span id="user-name"></span>
+      <button class="btn r s" onclick="logout()" style="font-size:12px; padding:2px 8px;">ออก</button>
+    </div>
+  </div>
+
+  <!-- หน้า Lobby -->
+  <div id="lobby" class="scr on">
+    <div class="deco">
+      <div class="sun"></div>
+      <div class="cl"></div>
+      <div class="hill h1"></div>
+      <div class="hill h2"></div>
+      <div class="gnd"></div>
+    </div>
+    <div class="stage">
+      <div class="tx">
+        <h1 id="gt">
+          <span>S</span><span>t</span><span>a</span><span>t</span><span>Z</span><span>o</span><span>o</span>
+        </h1>
+        <p class="tag">เกมเรียนรู้โค้ดดิ้งกับสัตว์ป่าแสนน่ารัก</p>
+      </div>
+      <button id="play" class="btn g">เริ่มเล่นเกม</button>
+    </div>
+  </div>
+
+  <!-- นำเข้า SDK ของ Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // 1. นำข้อมูล Firebase Config จาก Firebase Console มาวางที่นี่
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // 2. เริ่มต้นระบบ Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    // 3. ฟังก์ชันสำหรับ Sign in ผ่าน Google
+    function loginWithGoogle() {
+      auth.signInWithPopup(googleProvider)
+        .then((result) => {
+          console.log("เข้าสู่ระบบสำเร็จ:", result.user);
+        })
+        .catch((error) => {
+          console.error("ข้อผิดพลาด:", error);
+          alert("ไม่สามารถเข้าสู่ระบบได้: " + error.message);
+        });
+    }
+
+    // 4. ฟังก์ชันสำหรับ ออกจากระบบ (Logout)
+    function logout() {
+      auth.signOut().then(() => {
+        console.log("ออกจากระบบแล้ว");
+      });
+    }
+
+    // 5. ตัวติดตามสถานะการล็อกอิน (Auth State Observer)
+    auth.onAuthStateChanged((user) => {
+      const loginBtn = document.getElementById('login-btn');
+      const userProfile = document.getElementById('user-profile');
+      const userName = document.getElementById('user-name');
+      const userAvatar = document.getElementById('user-avatar');
+
+      if (user) {
+        loginBtn.style.display = 'none';
+        userProfile.style.display = 'flex';
+        userName.textContent = user.displayName || user.email;
+        userAvatar.src = user.photoURL || 'https://via.placeholder.com/30';
+      } else {
+        loginBtn.style.display = 'inline-block';
+        userProfile.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
